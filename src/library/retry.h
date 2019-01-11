@@ -6,6 +6,7 @@
 #define DIRDEMO_RETRY_H
 
 #include <thread>
+#include <QFile>
 
 struct TimeOptions {
     int Count;
@@ -69,5 +70,13 @@ void DoWithRetryThrows(TimeOptions options, const Function& function, Args&&... 
         }
     }
 };
+
+static const TimeOptions DefaultTimeOptions(/*Count*/3, 0, 0, 0, /*Milliseconds*/30, 0);
+
+inline static void TryOpenQFile(QFile& file) {
+    if (!file.open(QIODevice::ReadOnly)) {
+        throw std::logic_error("Can't open file: " + file.fileName().toStdString());
+    }
+}
 
 #endif //DIRDEMO_RETRY_H

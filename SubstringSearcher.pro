@@ -24,11 +24,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp
+        src/main.cpp \
+        src/interface/mainwindow.cpp \
+        src/library/worker.cpp \
+        src/library/indexer.cpp \
+        src/library/searcher.cpp \
+        src/library/retry.cpp
 
 HEADERS += \
-        mainwindow.h
+        src/interface/mainwindow.h \
+        src/library/worker.h \
+        src/library/indexer.h \
+        src/library/searcher.h \
+        src/library/retry.h
 
 FORMS += \
-        mainwindow.ui
+        src/interface/mainwindow.ui
+
+CONFIG (debug, debug|release) {
+    CONFIG += \
+        console
+}

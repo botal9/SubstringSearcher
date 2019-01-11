@@ -11,7 +11,11 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_library(SearcherLib STATIC
         retry.cpp
         retry.h
-        Indexer.cpp
-        Indexer.h)
+        indexer.cpp
+        indexer.h
+        worker.cpp
+        worker.h
+        searcher.cpp
+        searcher.h)
 
 qt5_use_modules(SearcherLib Widgets)
