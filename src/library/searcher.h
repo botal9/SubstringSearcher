@@ -33,13 +33,15 @@ public slots:
     void Stop();
 
 signals:
-    void FoundFile(const QString&);
+    void Started();
+    void FileProcessed();
+    void FileFound(const QString&);
     void Finished();
 
 private:
     QString Pattern;
     char* PatternStd = nullptr;
-    QSet<QByteArray> Trigrams;
+    FileTrigrams Trigrams;
     const FilesPool* FilesData = nullptr;
     std::atomic_bool NeedStop = false;
 };

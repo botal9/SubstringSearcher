@@ -10,7 +10,16 @@
 #include <QDebug>
 
 static constexpr qint32 SHIFT = 2;
+static constexpr qint32 MAX_CHAR = 256;
 static constexpr qint64 BUFFER_SIZE = 128 * 1024;
+
+static inline qint32 hash(const char* str) {
+    qint32 result = 0;
+    for (int i = 0; i < 3; ++i) {
+        result = result * MAX_CHAR + (qint32)str[i];
+    }
+    return result;
+}
 
 Searcher::Searcher(const QString& pattern)
     : Pattern(pattern)
@@ -20,11 +29,7 @@ Searcher::Searcher(const QString& pattern)
     PatternStd[pattern.size()] = '\0';
     assert(!Pattern.isEmpty());
     for (qint32 i = 0; i < (qint32)Pattern.size() - SHIFT; ++i) {
-        QByteArray tmp;
-        for (qint32 j = i; j < i + 3; ++j) {
-            tmp.push_back(Pattern[j].toLatin1());
-        }
-        Trigrams.insert(tmp);
+        Trigrams.insert(hash(PatternStd + i));
     }
 }
 
@@ -65,6 +70,7 @@ bool Searcher::CheckFile(QFile &file) {
     }
 
     file.close();
+    memset(buffer, 'v', BUFFER_SIZE);
     delete[] buffer;
     return result;
 }
@@ -74,6 +80,7 @@ bool Searcher::CheckTrigrams(const FileTrigrams& fileTrigrams) {
 }
 
 void Searcher::Process() {
+    emit Started();
     for (auto it = FilesData->begin(); it != FilesData->end(); ++it) {
         if (NeedStop) {
             break;
@@ -82,9 +89,10 @@ void Searcher::Process() {
             continue; // file doesn't contain at least one of pattern's trigram
         }*/
         QFile file(it.key());
+        emit FileProcessed();
         try {
             if (CheckFile(file)) {
-                emit FoundFile(file.fileName());
+                emit FileFound(file.fileName());
             }
         } catch (std::exception& e) {
             qDebug() << e.what();

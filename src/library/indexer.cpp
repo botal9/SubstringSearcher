@@ -8,9 +8,18 @@
 #include <QDebug>
 #include <QDirIterator>
 
+static constexpr qint32 MAX_CHAR = 256;
 static constexpr qint64 BUFFER_SIZE = 128 * 1024;
 static constexpr qint64 MAGIC_TRIGRAMS = 20000;
 static constexpr qint64 SHIFT = 2;
+
+static inline qint32 hash(const char* str) {
+    qint32 result = 0;
+    for (int i = 0; i < 3; ++i) {
+        result = result * MAX_CHAR + (qint32)str[i];
+    }
+    return result;
+}
 
 Indexer::Indexer(const QDir& directory)
     : WorkingDirectory(directory)
@@ -36,19 +45,19 @@ void Indexer::Stop() {
     NeedStop = true;
 }
 
-void Indexer::CountTrigrams(QFile& file, QSet<QByteArray>& trigrams) {
+void Indexer::CountTrigrams(QFile& file, FileTrigrams& trigrams) {
     DoWithRetryThrows(DefaultTimeOptions, TryOpenQFile, file);
 
     char* buffer = new char[BUFFER_SIZE];
 
     file.read(buffer, SHIFT);
     while (!file.atEnd()) {
-        if (NeedStop) {
+        if (NeedStop || trigrams.size() >= MAGIC_TRIGRAMS) {
             break;
         }
         qint64 len = file.read(buffer + SHIFT, BUFFER_SIZE - SHIFT);
         for (qint64 i = 0; i < len - SHIFT; ++i) {
-            trigrams.insert(QByteArray(buffer + i, 3)); // trigram = 3 chars
+            trigrams.insert(hash(buffer + i)); // trigram = 3 chars
         }
         memmove(buffer, buffer + BUFFER_SIZE - SHIFT, SHIFT);
     }
@@ -58,6 +67,7 @@ void Indexer::CountTrigrams(QFile& file, QSet<QByteArray>& trigrams) {
 }
 
 void Indexer::Process() {
+    emit Started();
     QDirIterator it(WorkingDirectory, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
     while (it.hasNext()) {
         if (NeedStop) {
@@ -75,10 +85,10 @@ void Indexer::Process() {
             continue;
         }
 
-        QSet<QByteArray> trigrams;
+        FileTrigrams trigrams;
         QFile file(fileInfo.absoluteFilePath());
         try {
-            //CountTrigrams(file, trigrams);
+            CountTrigrams(file, trigrams);
         } catch (std::exception& e) {
             qDebug() << e.what();
         }
@@ -89,5 +99,5 @@ void Indexer::Process() {
         Watcher->addPath(fileInfo.absoluteFilePath());
         Data[fileInfo.absoluteFilePath()] = trigrams;
     }
-    emit Finished(Data);
+    emit Found(Data);
 }

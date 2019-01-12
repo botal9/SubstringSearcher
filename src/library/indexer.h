@@ -16,7 +16,7 @@
 #include <QObject>
 #include <QVector>
 
-using FileTrigrams = QSet<QByteArray>;
+using FileTrigrams = QSet<qint32>;
 using FilesPool = QHash<QString, FileTrigrams>;
 
 class Indexer : public QObject {
@@ -33,10 +33,12 @@ public:
     void Process();
 
 private:
-    void CountTrigrams(QFile& file, QSet<QByteArray>& trigrams);
+    void CountTrigrams(QFile& file, FileTrigrams& trigrams);
 
 signals:
-    void Finished(const FilesPool&);
+    void Started();
+    void Finished();
+    void Found(const FilesPool&);
 
 public slots:
     void Stop();

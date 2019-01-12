@@ -26,7 +26,6 @@ public:
     void setWorkingDirectory(const QDir& directory);
 
 public slots:
-    void Process();
     void Index();
     void Finish();
     void Stop();
@@ -39,8 +38,6 @@ signals:
     void Finished();
     void Aborted();
     void StopAll();
-    void Ready();
-    void PatternChanged();
 
 private:
     QDir WorkingDirectory;

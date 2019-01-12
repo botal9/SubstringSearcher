@@ -24,36 +24,42 @@ Worker::~Worker() {
 
 void Worker::Index() {
     qDebug() << "Start indexing directory";
+    if (auto files = Watcher.files(); !files.isEmpty()) {
+        Watcher.removePaths(files);
+    }
+    if (auto dirs = Watcher.directories(); !dirs.isEmpty()) {
+        Watcher.removePaths(dirs);
+    }
     NeedStop = false;
 
     Indexer indexer(WorkingDirectory, &Watcher);
-    connect(&indexer, SIGNAL(Finished(const FilesPool&)), this, SLOT(SetFilesPool(const FilesPool&)));
     connect(this, SIGNAL(StopAll()), &indexer, SLOT(Stop()), Qt::DirectConnection);
+    connect(&indexer, SIGNAL(Started()), MainWindow, SLOT(PreIndexInterface()));
+    connect(&indexer, SIGNAL(Found(const FilesPool&)), this, SLOT(SetFilesPool(const FilesPool&)));
 
     indexer.Process();
     emit SetupFilesNumber(FilesData.size());
-    emit Ready();
-    qDebug() << "Index ready";
+    qDebug() << "Finished indexing";
 }
 
 void Worker::Search() {
     qDebug() << "Start searching for pattern";
 
     Searcher searcher(Pattern, &FilesData);
-    connect(&searcher, SIGNAL(FoundFile(const QString&)), MainWindow, SLOT(AddFile(const QString&)));
+
     connect(this, SIGNAL(StopAll()), &searcher, SLOT(Stop()), Qt::DirectConnection);
+    connect(&searcher, SIGNAL(Started()), MainWindow, SLOT(PreSearchInterface()));
+    connect(&searcher, SIGNAL(FileFound(const QString&)), MainWindow, SLOT(AddFile(const QString&)));
+    connect(&searcher, SIGNAL(FileProcessed()), MainWindow, SLOT(UpdateProgressBar()));
 
     searcher.Process();
     Finish();
-}
-
-void Worker::Process() {
-    Index();
-    Search();
+    qDebug() << "Finished searching";
 }
 
 void Worker::SetFilesPool(const FilesPool& filesPool) {
     FilesData = filesPool;
+    emit SetupFilesNumber(FilesData.size());
 }
 
 void Worker::ChangePattern(const QString& pattern) {
@@ -62,7 +68,6 @@ void Worker::ChangePattern(const QString& pattern) {
     }
     qDebug() << "Pattern Changed:" << Pattern << "->" << pattern;
     Pattern = pattern;
-    emit PatternChanged();
     Search();
 }
 
@@ -73,7 +78,6 @@ void Worker::Stop() {
 }
 
 void Worker::Finish() {
-    qDebug() << "Searcher finished";
     if (NeedStop) {
         emit Aborted();
     } else {

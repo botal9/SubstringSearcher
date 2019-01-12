@@ -32,22 +32,24 @@ public:
 private:
     void ShowAbout();
     void SelectDirectory();
-    void ReSearchDirectory();
+    void SearchSubstring();
     void Stop();
-    void PostProcessInterface(bool success);
     void ResetThread();
+    void SetupInterface();
+    void PostSearchInterface(bool success);
 
 public slots:
-    void SetupInterface();
+    void UpdateProgressBar();
+    void PreIndexInterface();
+    void PostIndexInterface(qint64 filesNumber);
+    void PreSearchInterface();
+    void PostSearchFinish();
+    void PostSearchAbort();
     void AddFile(const QString& file);
-    void UpdateProgressBar(qint64 filesNumber);
-    void SetupProgressBar(qint64 filesNumber);
-    void PostProcessFinish();
-    void PostProcessAbort();
 
 signals:
     void StopAll();
-    void SearchSubstring(const QString& pattern);
+    void DoSearch(const QString& pattern);
 
 private:
     std::unique_ptr<Ui::MainWindow> ui;

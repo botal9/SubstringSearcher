@@ -32,8 +32,8 @@ MainWindow::MainWindow(QWidget* parent)
     ui->progressBar->hide();
     ui->actionStopScanning->setVisible(false);
 
-    connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::ReSearchDirectory);
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::ReSearchDirectory);
+    connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::SearchSubstring);
+    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::SearchSubstring);
     connect(ui->actionScanDirectory, &QAction::triggered, this, &MainWindow::SelectDirectory);
     connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::ShowAbout);
@@ -64,34 +64,85 @@ void MainWindow::SelectDirectory() {
     QFileInfo selectedDirectoryInfo = QFileInfo(SelectedDirectory.absolutePath());
     BeautySelectedDirectory = QDir::toNativeSeparators(selectedDirectoryInfo.absoluteFilePath()).append(QDir::separator());
 
-    Time.restart();
     if (!selectedDirectoryInfo.exists()) {
         return;
     }
 
     NeedStop = false;
+    ResetThread();
     SetupInterface();
 
     WorkingThread = new QThread();
     Worker* worker = new Worker(SelectedDirectory.absolutePath(), this);
     worker->moveToThread(WorkingThread);
 
-    connect(WorkingThread, SIGNAL(started()), worker, SLOT(Index()));
-    connect(this, SIGNAL(SearchSubstring(const QString&)), worker, SLOT(ChangePattern(const QString&)));
-    connect(worker, SIGNAL(PatternChanged()), this, SLOT(SetupInterface()));
     connect(this, SIGNAL(StopAll()), worker, SLOT(Stop()), Qt::DirectConnection);
+    connect(this, SIGNAL(DoSearch(const QString&)), worker, SLOT(ChangePattern(const QString&)));
+    connect(WorkingThread, SIGNAL(started()), worker, SLOT(Index()));
     connect(WorkingThread, SIGNAL(finished()), worker, SLOT(deleteLater()));
     connect(WorkingThread, SIGNAL(finished()), WorkingThread, SLOT (deleteLater()));
-    connect(worker, SIGNAL(SetupFilesNumber(qint64)), this, SLOT(SetupProgressBar(qint64)));
-    connect(worker, SIGNAL(Aborted()), this, SLOT(PostProcessAbort()));
-    connect(worker, SIGNAL(Finished()), this, SLOT(PostProcessFinish()));
+    connect(worker, SIGNAL(SetupFilesNumber(qint64)), this, SLOT(PostIndexInterface(qint64)));
+    connect(worker, SIGNAL(Aborted()), this, SLOT(PostSearchAbort()));
+    connect(worker, SIGNAL(Finished()), this, SLOT(PostSearchFinish()));
 
     WorkingThread->start();
 }
 
-void MainWindow::ReSearchDirectory() {
+void MainWindow::SearchSubstring() {
+    Time.restart();
     QString pattern = ui->lineEdit->text();
-    emit SearchSubstring(pattern);
+    emit DoSearch(pattern);
+}
+
+void MainWindow::UpdateProgressBar() {
+    ui->progressBar->setValue(ui->progressBar->value() + 1);
+}
+
+void MainWindow::SetupInterface() {
+    ui->statusAction->hide();
+    ui->statusScanned->hide();
+    ui->progressBar->hide();
+    ui->selectedDirectory->setText("Selected directory: " + BeautySelectedDirectory);
+    ui->selectedDirectory->show();
+    ui->actionStopScanning->setVisible(true);
+    ui->treeWidget->clear();
+    ui->treeWidget->setVisible(true);
+}
+
+void MainWindow::PreIndexInterface() {
+    ui->treeWidget->clear();
+}
+
+void MainWindow::PostIndexInterface(qint64 filesNumber) {
+    ui->progressBar->setRange(0, filesNumber);
+    ui->statusScanned->setText(QString("Files scanned: ").append(QString::number(filesNumber)));
+    ui->statusScanned->show();
+    ui->statusAction->setText("Write substring to search");
+    ui->statusAction->show();
+}
+
+void MainWindow::PreSearchInterface() {
+    ui->progressBar->setValue(0);
+    ui->progressBar->show();
+}
+
+void MainWindow::PostSearchInterface(bool success) {
+    ui->progressBar->hide();
+    ui->statusAction->show();
+    if (success) {
+        ui->statusAction->setText("Finished");
+    } else {
+        ui->statusAction->setText("Aborted");
+    }
+    qDebug("Time elapsed: %d ms", Time.elapsed());
+}
+
+void MainWindow::PostSearchFinish() {
+    PostSearchInterface(/*success*/true);
+}
+
+void MainWindow::PostSearchAbort() {
+    PostSearchInterface(/*success*/false);
 }
 
 void MainWindow::AddFile(const QString& file) {
@@ -104,47 +155,6 @@ void MainWindow::AddFile(const QString& file) {
 
     item->setText(0, beautyName);
     ui->treeWidget->addTopLevelItem(item);
-}
-
-void MainWindow::SetupProgressBar(qint64 filesNumber) {
-    ui->progressBar->show();
-    ui->progressBar->setRange(0, filesNumber);
-}
-
-void MainWindow::UpdateProgressBar(qint64 filesNumber) {
-    ui->progressBar->setValue(ui->progressBar->value() + filesNumber);
-}
-
-void MainWindow::PostProcessInterface(bool success) {
-    ui->progressBar->hide();
-    ui->statusScanned->setText(QString("Files scanned: ").append(QString::number(ui->progressBar->value())));
-    ui->statusScanned->show();
-    if (success) {
-        ui->statusAction->setText("Finished");
-    } else {
-        ui->statusAction->setText("Aborted");
-    }
-    ui->statusAction->show();
-    //ResetThread();
-    qDebug("Time elapsed: %d ms", Time.elapsed());
-}
-
-void MainWindow::PostProcessFinish() {
-    PostProcessInterface(/*success*/true);
-}
-
-void MainWindow::PostProcessAbort() {
-    PostProcessInterface(/*success*/false);
-}
-
-void MainWindow::SetupInterface() {
-    ui->statusAction->hide();
-    ui->statusScanned->hide();
-    ui->selectedDirectory->setText("Selected directory: " + BeautySelectedDirectory);
-    ui->selectedDirectory->show();
-    ui->actionStopScanning->setVisible(true);
-    ui->treeWidget->clear();
-    ui->treeWidget->setVisible(true);
 }
 
 void MainWindow::ResetThread() {
