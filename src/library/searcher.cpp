@@ -108,12 +108,12 @@ void Searcher::Process() {
         if (NeedStop) {
             break;
         }
-        ++counter;
 
         QFileInfo fileInfo(it.key());
         if (!fileInfo.exists()) {
             emit RemoveFile(fileInfo.fileName());
         }
+        ++counter;
         if (!CheckTrigrams(it.value())) {
             continue; // file doesn't contain at least one of pattern's trigram
         }

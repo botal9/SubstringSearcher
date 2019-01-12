@@ -87,7 +87,6 @@ void Indexer::Process() {
             continue;
         }
         if (fileInfo.isDir()) {
-            Watcher->addPath(fileInfo.absolutePath());
             continue;
         } else if (!fileInfo.isFile()) {
             continue;
@@ -104,7 +103,6 @@ void Indexer::Process() {
             // file is binary
             continue;
         }
-        Watcher->addPath(fileInfo.absoluteFilePath());
         ConvertToTrigramList(trigrams, Data[fileInfo.absoluteFilePath()]);
     }
     emit Found(Data);
