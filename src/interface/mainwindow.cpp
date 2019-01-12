@@ -161,6 +161,7 @@ void MainWindow::AddFile(const QString& file) {
 }
 
 void MainWindow::ResetThread() {
+    emit StopAll();
     if (WorkingThread != nullptr && !WorkingThread->isFinished()) {
         WorkingThread->quit();
         WorkingThread->wait();
