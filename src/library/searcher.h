@@ -28,7 +28,7 @@ public:
 
     void SetFilesData(const FilesPool* filesPool);
     void SearchInFile(QFile &file);
-    bool CheckTrigrams(const FileTrigrams& fileTrigrams);
+    bool CheckTrigrams(const TrigramsList & trigramList);
     void Process();
 
 private:

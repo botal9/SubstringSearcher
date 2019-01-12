@@ -45,6 +45,13 @@ void Indexer::Stop() {
     NeedStop = true;
 }
 
+void Indexer::ConvertToTrigramList(const FileTrigrams &trigrams, TrigramsList& trigramsList) {
+    for (qint32 trigram : trigrams) {
+        trigramsList.push_back(trigram);
+    }
+    std::sort(trigramsList.begin(), trigramsList.end());
+}
+
 void Indexer::CountTrigrams(QFile& file, FileTrigrams& trigrams) {
     DoWithRetryThrows(DefaultTimeOptions, TryOpenQFile, file);
 
@@ -98,7 +105,7 @@ void Indexer::Process() {
             continue;
         }
         Watcher->addPath(fileInfo.absoluteFilePath());
-        Data[fileInfo.absoluteFilePath()] = trigrams;
+        ConvertToTrigramList(trigrams, Data[fileInfo.absoluteFilePath()]);
     }
     emit Found(Data);
 }

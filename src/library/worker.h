@@ -33,8 +33,8 @@ public slots:
     void ChangePattern(const QString& pattern);
     void Search();
 
-    void UpdateFile(const QString& fileName);
-    void UpdateDirectory(const QString& directory);
+    //void UpdateFile(const QString& fileName);
+    //void UpdateDirectory(const QString& directory);
     void RemoveFile(const QString& fileName);
 
 signals:

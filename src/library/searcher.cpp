@@ -92,8 +92,13 @@ void Searcher::SearchInFile(QFile &file) {
     delete[] buffer;
 }
 
-bool Searcher::CheckTrigrams(const FileTrigrams& fileTrigrams) {
-    return fileTrigrams.contains(Trigrams);
+bool Searcher::CheckTrigrams(const TrigramsList& trigramList) {
+    for (qint32 trigram : Trigrams) {
+        if (!std::binary_search(trigramList.begin(), trigramList.end(), trigram)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void Searcher::Process() {

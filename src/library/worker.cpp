@@ -8,8 +8,8 @@ Worker::Worker(const QString &directory, QObject* parent)
     : WorkingDirectory(directory)
     , MainWindow(parent)
 {
-    connect(&Watcher, SIGNAL(fileChanged(const QString&)), this, SLOT(UpdateFile(const QString&)));
-    connect(&Watcher, SIGNAL(directoryChanged(const QString&)), this, SLOT(UpdateDirectory(const QString&)));
+    //connect(&Watcher, SIGNAL(fileChanged(const QString&)), this, SLOT(UpdateFile(const QString&)));
+    //connect(&Watcher, SIGNAL(directoryChanged(const QString&)), this, SLOT(UpdateDirectory(const QString&)));
 }
 
 void Worker::setWorkingDirectory(const QDir& directory) {
@@ -60,10 +60,10 @@ void Worker::SetFilesData(const FilesPool& filesPool) {
 }
 
 void Worker::UpdateFilesData(const FilesPool& filesPool) {
-    for (const auto& key : filesPool.keys()) {
+    /*for (const auto& key : filesPool.keys()) {
         FilesData.remove(key);
     }
-    FilesData.unite(filesPool);
+    FilesData.unite(filesPool);*/
 }
 
 void Worker::ChangePattern(const QString& pattern) {
@@ -95,7 +95,7 @@ void Worker::RemoveFile(const QString& fileName) {
     FilesData.remove(fileName);
     Watcher.removePath(fileName);
 }
-
+/*
 void Worker::UpdateFile(const QString& fileName) {
     QFileInfo fileInfo(fileName);
     if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.permission(QFile::ReadUser)) {
@@ -123,3 +123,4 @@ void Worker::UpdateDirectory(const QString& directory) {
         UpdateFile(fileName);
     }
 }
+*/
