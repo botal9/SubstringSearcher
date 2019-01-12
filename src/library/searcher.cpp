@@ -47,10 +47,27 @@ void Searcher::SetFilesData(const FilesPool* filesPool) {
     FilesData = filesPool;
 }
 
-bool Searcher::CheckFile(QFile &file) {
+QString Searcher::MakeSlice(const char* buffer, const char* ptr) {
+    const qint64 range = 20;
+    qint64 left = 0, right = 0;
+    qint64 index = ptr - buffer;
+
+    if (index - range > 0) {
+        left = index - range;
+    } else {
+        left = 0;
+    }
+    if (index + range < BUFFER_SIZE) {
+        right = index + range;
+    } else {
+        right = BUFFER_SIZE;
+    }
+    return QString(QByteArray(buffer + left, right - left));
+}
+
+void Searcher::SearchInFile(QFile &file) {
     DoWithRetryThrows(DefaultTimeOptions, TryOpenQFile, file);
 
-    bool result = false;
     qint64 patternShift = Pattern.size() - 1;
     char* buffer = new char[BUFFER_SIZE + 1];
     buffer[BUFFER_SIZE] = '\0';
@@ -61,7 +78,8 @@ bool Searcher::CheckFile(QFile &file) {
         buffer[len] = '\0';
         char* ptr = strstr(buffer, PatternStd);
         if (ptr) {
-            result = true;
+            QString slice = MakeSlice(buffer, ptr);
+            emit FileFound(file.fileName(), slice);
             break;
         }
         if (!file.atEnd() && len > patternShift) {
@@ -72,7 +90,6 @@ bool Searcher::CheckFile(QFile &file) {
     file.close();
     memset(buffer, /*random non-zero char*/'z', BUFFER_SIZE);
     delete[] buffer;
-    return result;
 }
 
 bool Searcher::CheckTrigrams(const FileTrigrams& fileTrigrams) {
@@ -102,9 +119,7 @@ void Searcher::Process() {
             emit FileProcessed();
         }
         try {
-            if (CheckFile(file)) {
-                emit FileFound(file.fileName());
-            }
+            SearchInFile(file);
         } catch (std::exception& e) {
             qDebug() << e.what();
         }

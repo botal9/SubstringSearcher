@@ -27,9 +27,12 @@ public:
     ~Searcher();
 
     void SetFilesData(const FilesPool* filesPool);
-    bool CheckFile(QFile& file);
+    void SearchInFile(QFile &file);
     bool CheckTrigrams(const FileTrigrams& fileTrigrams);
     void Process();
+
+private:
+    QString MakeSlice(const char* buffer, const char* ptr);
 
 public slots:
     void Stop();
@@ -37,7 +40,7 @@ public slots:
 signals:
     void Started();
     void FileProcessed();
-    void FileFound(const QString&);
+    void FileFound(const QString& fileName, const QString& slice);
     void Finished();
     void RemoveFile(const QString& fileName);
 

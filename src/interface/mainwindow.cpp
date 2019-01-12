@@ -148,7 +148,7 @@ void MainWindow::PostSearchAbort() {
     PostSearchInterface(/*success*/false);
 }
 
-void MainWindow::AddFile(const QString& file) {
+void MainWindow::AddFile(const QString& file, const QString& context) {
     QRegExp regExp(BeautySelectedDirectory);
 
     QTreeWidgetItem* item = new QTreeWidgetItem();
@@ -157,6 +157,11 @@ void MainWindow::AddFile(const QString& file) {
     beautyName.remove(regExp);
 
     item->setText(0, beautyName);
+
+    QTreeWidgetItem* child = new QTreeWidgetItem();
+    child->setText(0, "\"" + context + "\"");
+    item->addChild(child);
+
     ui->treeWidget->addTopLevelItem(item);
 }
 

@@ -46,7 +46,7 @@ void Worker::Search() {
     Searcher searcher(Pattern, &FilesData);
     connect(this, SIGNAL(StopAll()), &searcher, SLOT(Stop()), Qt::DirectConnection);
     connect(&searcher, SIGNAL(Started()), MainWindow, SLOT(PreSearchInterface()));
-    connect(&searcher, SIGNAL(FileFound(const QString&)), MainWindow, SLOT(AddFile(const QString&)));
+    connect(&searcher, SIGNAL(FileFound(const QString&, const QString&)), MainWindow, SLOT(AddFile(const QString&, const QString&)));
     connect(&searcher, SIGNAL(FileProcessed()), MainWindow, SLOT(UpdateProgressBar()));
     connect(&searcher, SIGNAL(RemoveFile(const QString&)), this, SLOT(RemoveFile(const QString&)));
 

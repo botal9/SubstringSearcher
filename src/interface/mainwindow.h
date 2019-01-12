@@ -45,7 +45,7 @@ public slots:
     void PreSearchInterface();
     void PostSearchFinish();
     void PostSearchAbort();
-    void AddFile(const QString& file);
+    void AddFile(const QString& file, const QString& context);
 
 signals:
     void StopAll();
