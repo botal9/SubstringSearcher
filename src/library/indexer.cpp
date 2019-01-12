@@ -55,7 +55,7 @@ void Indexer::CountTrigrams(QFile& file, FileTrigrams& trigrams) {
         if (NeedStop || trigrams.size() >= MAGIC_TRIGRAMS) {
             break;
         }
-        qint64 len = file.read(buffer + SHIFT, BUFFER_SIZE - SHIFT);
+        qint64 len = SHIFT + file.read(buffer + SHIFT, BUFFER_SIZE - SHIFT);
         for (qint64 i = 0; i < len - SHIFT; ++i) {
             trigrams.insert(hash(buffer + i)); // trigram = 3 chars
         }

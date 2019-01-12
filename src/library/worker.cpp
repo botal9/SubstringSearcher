@@ -8,11 +8,8 @@ Worker::Worker(const QString &directory, QObject* parent)
     : WorkingDirectory(directory)
     , MainWindow(parent)
 {
-}
-
-Worker::Worker(QObject* parent)
-    : MainWindow(parent)
-{
+    connect(&Watcher, SIGNAL(fileChanged(const QString&)), this, SLOT(UpdateFile(const QString&)));
+    connect(&Watcher, SIGNAL(directoryChanged(const QString&)), this, SLOT(UpdateDirectory(const QString&)));
 }
 
 void Worker::setWorkingDirectory(const QDir& directory) {
@@ -35,7 +32,7 @@ void Worker::Index() {
     Indexer indexer(WorkingDirectory, &Watcher);
     connect(this, SIGNAL(StopAll()), &indexer, SLOT(Stop()), Qt::DirectConnection);
     connect(&indexer, SIGNAL(Started()), MainWindow, SLOT(PreIndexInterface()));
-    connect(&indexer, SIGNAL(Found(const FilesPool&)), this, SLOT(SetFilesPool(const FilesPool&)));
+    connect(&indexer, SIGNAL(Found(const FilesPool&)), this, SLOT(SetFilesData(const FilesPool&)));
 
     indexer.Process();
     emit SetupFilesNumber(FilesData.size());
@@ -51,23 +48,32 @@ void Worker::Search() {
     connect(&searcher, SIGNAL(Started()), MainWindow, SLOT(PreSearchInterface()));
     connect(&searcher, SIGNAL(FileFound(const QString&)), MainWindow, SLOT(AddFile(const QString&)));
     connect(&searcher, SIGNAL(FileProcessed()), MainWindow, SLOT(UpdateProgressBar()));
+    connect(&searcher, SIGNAL(RemoveFile(const QString&)), this, SLOT(RemoveFile(const QString&)));
 
     searcher.Process();
     Finish();
     qDebug() << "Finished searching";
 }
 
-void Worker::SetFilesPool(const FilesPool& filesPool) {
+void Worker::SetFilesData(const FilesPool& filesPool) {
     FilesData = filesPool;
-    emit SetupFilesNumber(FilesData.size());
+}
+
+void Worker::UpdateFilesData(const FilesPool& filesPool) {
+    for (const auto& key : filesPool.keys()) {
+        FilesData.remove(key);
+    }
+    FilesData.unite(filesPool);
 }
 
 void Worker::ChangePattern(const QString& pattern) {
-    if (pattern.isEmpty() || pattern == Pattern) {
+    if (pattern.isEmpty()) {
         return;
     }
-    qDebug() << "Pattern Changed:" << Pattern << "->" << pattern;
-    Pattern = pattern;
+    if (Pattern != pattern) {
+        qDebug() << "Pattern Changed:" << Pattern << "->" << pattern;
+        Pattern = pattern;
+    }
     Search();
 }
 
@@ -82,5 +88,38 @@ void Worker::Finish() {
         emit Aborted();
     } else {
         emit Finished();
+    }
+}
+
+void Worker::RemoveFile(const QString& fileName) {
+    FilesData.remove(fileName);
+    Watcher.removePath(fileName);
+}
+
+void Worker::UpdateFile(const QString& fileName) {
+    QFileInfo fileInfo(fileName);
+    if (!fileInfo.exists() || !fileInfo.isFile() || !fileInfo.permission(QFile::ReadUser)) {
+        RemoveFile(fileName);
+        return;
+    }
+
+    FilesData[fileName].clear();
+
+    Indexer indexer;
+    QFile file(fileName);
+    indexer.CountTrigrams(file, FilesData[fileName]);
+}
+
+void Worker::UpdateDirectory(const QString& directory) {
+    QFileInfo directoryInfo(directory);
+    if (!directoryInfo.exists()) {
+        Watcher.removePath(directory);
+        return;
+    }
+
+    QDir dir(directory);
+    for (const QString& fileName : dir.entryList()) {
+        Watcher.addPath(fileName);
+        UpdateFile(fileName);
     }
 }

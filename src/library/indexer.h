@@ -30,8 +30,6 @@ public:
     void setWorkingDirectory(const QDir& directory);
 
     void Process();
-
-private:
     void CountTrigrams(QFile& file, FileTrigrams& trigrams);
 
 signals:

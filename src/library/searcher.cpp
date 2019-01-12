@@ -57,7 +57,7 @@ bool Searcher::CheckFile(QFile &file) {
 
     file.read(buffer, patternShift);
     while (!file.atEnd() && !NeedStop) {
-        qint64 len = file.read(buffer + patternShift, BUFFER_SIZE - patternShift);
+        qint64 len = patternShift + file.read(buffer + patternShift, BUFFER_SIZE - patternShift);
         buffer[len] = '\0';
         char* ptr = strstr(buffer, PatternStd);
         if (ptr) {
@@ -87,11 +87,18 @@ void Searcher::Process() {
             break;
         }
         ++counter;
+
+        QFileInfo fileInfo(it.key());
+        if (!fileInfo.exists()) {
+            emit RemoveFile(fileInfo.fileName());
+        }
         if (!CheckTrigrams(it.value())) {
             continue; // file doesn't contain at least one of pattern's trigram
         }
+
         QFile file(it.key());
         if ((counter & (PROCESSED_FILES_UPDATE - 1)) == 0) {
+            // Send signal when process pack of files
             emit FileProcessed();
         }
         try {

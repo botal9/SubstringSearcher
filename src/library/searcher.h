@@ -39,6 +39,7 @@ signals:
     void FileProcessed();
     void FileFound(const QString&);
     void Finished();
+    void RemoveFile(const QString& fileName);
 
 private:
     QString Pattern;

@@ -19,7 +19,6 @@ class Worker : public QObject {
 
 public:
     Worker() = default;
-    Worker(QObject* parent);
     Worker(const QString& directory, QObject* parent);
     ~Worker();
 
@@ -29,9 +28,14 @@ public slots:
     void Index();
     void Finish();
     void Stop();
-    void SetFilesPool(const FilesPool& filesPool);
+    void SetFilesData(const FilesPool &filesPool);
+    void UpdateFilesData(const FilesPool& filesPool);
     void ChangePattern(const QString& pattern);
     void Search();
+
+    void UpdateFile(const QString& fileName);
+    void UpdateDirectory(const QString& directory);
+    void RemoveFile(const QString& fileName);
 
 signals:
     void SetupFilesNumber(qint64 filesNumber);
