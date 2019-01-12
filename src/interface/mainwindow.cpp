@@ -24,6 +24,7 @@ MainWindow::MainWindow(QWidget* parent)
 
     ui->treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
+    SetupInterface();
     ui->selectedDirectory->hide();
     ui->progressBar->reset();
     ui->progressBar->hide();
@@ -67,7 +68,6 @@ void MainWindow::SelectDirectory() {
 
     NeedStop = false;
     ResetThread();
-    SetupInterface();
 
     WorkingThread = new QThread();
     Worker* worker = new Worker(SelectedDirectory.absolutePath(), this);
