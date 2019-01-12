@@ -15,6 +15,8 @@
 #include <QSet>
 #include <QVector>
 
+constexpr const qint32 PROCESSED_FILES_UPDATE = (1 << 8);
+
 class Searcher : public QObject {
     Q_OBJECT
 

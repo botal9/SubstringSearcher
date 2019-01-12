@@ -14,7 +14,6 @@
 #include <QSet>
 #include <QFile>
 #include <QObject>
-#include <QVector>
 
 using FileTrigrams = QSet<qint32>;
 using FilesPool = QHash<QString, FileTrigrams>;

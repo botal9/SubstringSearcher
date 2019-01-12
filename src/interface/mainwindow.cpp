@@ -24,16 +24,13 @@ MainWindow::MainWindow(QWidget* parent)
 
     ui->treeWidget->header()->setSectionResizeMode(0, QHeaderView::Stretch);
 
-    ui->statusAction->setText("Choose directory");
-    ui->statusScanned->hide();
     ui->selectedDirectory->hide();
-
     ui->progressBar->reset();
     ui->progressBar->hide();
     ui->actionStopScanning->setVisible(false);
 
-    connect(ui->lineEdit, &QLineEdit::returnPressed, this, &MainWindow::SearchSubstring);
-    connect(ui->pushButton, &QPushButton::clicked, this, &MainWindow::SearchSubstring);
+    connect(ui->substringLine, &QLineEdit::returnPressed, this, &MainWindow::SearchSubstring);
+    connect(ui->findButton, &QPushButton::clicked, this, &MainWindow::SearchSubstring);
     connect(ui->actionScanDirectory, &QAction::triggered, this, &MainWindow::SelectDirectory);
     connect(ui->actionExit, &QAction::triggered, this, &QWidget::close);
     connect(ui->actionAbout, &QAction::triggered, this, &MainWindow::ShowAbout);
@@ -90,16 +87,16 @@ void MainWindow::SelectDirectory() {
 
 void MainWindow::SearchSubstring() {
     Time.restart();
-    QString pattern = ui->lineEdit->text();
+    QString pattern = ui->substringLine->text();
     emit DoSearch(pattern);
 }
 
 void MainWindow::UpdateProgressBar() {
-    ui->progressBar->setValue(ui->progressBar->value() + 1);
+    ui->progressBar->setValue(ui->progressBar->value() + PROCESSED_FILES_UPDATE);
 }
 
 void MainWindow::SetupInterface() {
-    ui->statusAction->hide();
+    ui->statusAction->setText("Choose directory to search.");
     ui->statusScanned->hide();
     ui->progressBar->hide();
     ui->selectedDirectory->setText("Selected directory: " + BeautySelectedDirectory);
@@ -110,6 +107,8 @@ void MainWindow::SetupInterface() {
 }
 
 void MainWindow::PreIndexInterface() {
+    ui->statusAction->setText("Processing directory. Please, wait.");
+    ui->treeWidget->setSortingEnabled(false);
     ui->treeWidget->clear();
 }
 
@@ -117,22 +116,26 @@ void MainWindow::PostIndexInterface(qint64 filesNumber) {
     ui->progressBar->setRange(0, filesNumber);
     ui->statusScanned->setText(QString("Files scanned: ").append(QString::number(filesNumber)));
     ui->statusScanned->show();
-    ui->statusAction->setText("Write substring to search");
+    ui->statusAction->setText("Input substring or Choose new directory to search.");
     ui->statusAction->show();
 }
 
 void MainWindow::PreSearchInterface() {
+    ui->statusAction->setText("Searching substring in files. Please, wait.");
+    ui->treeWidget->setSortingEnabled(false);
+    ui->treeWidget->clear();
     ui->progressBar->setValue(0);
     ui->progressBar->show();
 }
 
 void MainWindow::PostSearchInterface(bool success) {
+    ui->treeWidget->setSortingEnabled(true);
     ui->progressBar->hide();
     ui->statusAction->show();
     if (success) {
-        ui->statusAction->setText("Finished");
+        ui->statusAction->setText("Finished.");
     } else {
-        ui->statusAction->setText("Aborted");
+        ui->statusAction->setText("Aborted.");
     }
     qDebug("Time elapsed: %d ms", Time.elapsed());
 }

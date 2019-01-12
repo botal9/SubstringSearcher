@@ -9,9 +9,9 @@
 
 #include <QDebug>
 
-static constexpr qint32 SHIFT = 2;
-static constexpr qint32 MAX_CHAR = 256;
-static constexpr qint64 BUFFER_SIZE = 128 * 1024;
+static constexpr const qint32 MAX_CHAR = 256;
+static constexpr const qint64 SHIFT = 2;
+static constexpr const qint64 BUFFER_SIZE = 128 * 1024;
 
 static inline qint32 hash(const char* str) {
     qint32 result = 0;
@@ -70,7 +70,7 @@ bool Searcher::CheckFile(QFile &file) {
     }
 
     file.close();
-    memset(buffer, 'v', BUFFER_SIZE);
+    memset(buffer, /*random non-zero char*/'z', BUFFER_SIZE);
     delete[] buffer;
     return result;
 }
@@ -81,15 +81,19 @@ bool Searcher::CheckTrigrams(const FileTrigrams& fileTrigrams) {
 
 void Searcher::Process() {
     emit Started();
+    qint64 counter = 0;
     for (auto it = FilesData->begin(); it != FilesData->end(); ++it) {
         if (NeedStop) {
             break;
         }
-        /*if (!CheckTrigrams(it.value())) {
+        ++counter;
+        if (!CheckTrigrams(it.value())) {
             continue; // file doesn't contain at least one of pattern's trigram
-        }*/
+        }
         QFile file(it.key());
-        emit FileProcessed();
+        if ((counter & (PROCESSED_FILES_UPDATE - 1)) == 0) {
+            emit FileProcessed();
+        }
         try {
             if (CheckFile(file)) {
                 emit FileFound(file.fileName());

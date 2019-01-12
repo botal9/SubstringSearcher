@@ -44,9 +44,9 @@ void Worker::Index() {
 
 void Worker::Search() {
     qDebug() << "Start searching for pattern";
+    NeedStop = false;
 
     Searcher searcher(Pattern, &FilesData);
-
     connect(this, SIGNAL(StopAll()), &searcher, SLOT(Stop()), Qt::DirectConnection);
     connect(&searcher, SIGNAL(Started()), MainWindow, SLOT(PreSearchInterface()));
     connect(&searcher, SIGNAL(FileFound(const QString&)), MainWindow, SLOT(AddFile(const QString&)));

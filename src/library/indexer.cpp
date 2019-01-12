@@ -8,10 +8,10 @@
 #include <QDebug>
 #include <QDirIterator>
 
-static constexpr qint32 MAX_CHAR = 256;
-static constexpr qint64 BUFFER_SIZE = 128 * 1024;
-static constexpr qint64 MAGIC_TRIGRAMS = 20000;
-static constexpr qint64 SHIFT = 2;
+static constexpr const qint32 MAX_CHAR = 256;
+static constexpr const qint64 SHIFT = 2;
+static constexpr const qint64 BUFFER_SIZE = 128 * 1024;
+static constexpr const qint64 MAGIC_TRIGRAMS = 20000;
 
 static inline qint32 hash(const char* str) {
     qint32 result = 0;
@@ -68,7 +68,8 @@ void Indexer::CountTrigrams(QFile& file, FileTrigrams& trigrams) {
 
 void Indexer::Process() {
     emit Started();
-    QDirIterator it(WorkingDirectory, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
+    QDirIterator it(WorkingDirectory.absolutePath(), QDir::Files | QDir::NoDotAndDotDot,
+                QDirIterator::Subdirectories | QDirIterator::FollowSymlinks);
     while (it.hasNext()) {
         if (NeedStop) {
             break;
