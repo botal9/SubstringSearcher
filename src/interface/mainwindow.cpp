@@ -15,7 +15,7 @@ MainWindow::MainWindow(QWidget* parent)
     setGeometry(QStyle::alignedRect(Qt::LeftToRight, Qt::AlignCenter, size(), qApp->desktop()->availableGeometry()));
 
     QCommonStyle style;
-    setWindowTitle(QString("Duplicate File FileComparator"));
+    setWindowTitle(QString("Substring Searcher"));
 
     ui->actionScanDirectory->setIcon(style.standardIcon(QCommonStyle::SP_DialogOpenButton));
     ui->actionExit->setIcon(style.standardIcon(QCommonStyle::SP_DialogCloseButton));
